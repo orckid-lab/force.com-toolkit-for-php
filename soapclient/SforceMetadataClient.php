@@ -37,7 +37,13 @@ class SforceMetadataClient {
   public function __construct($wsdl, $loginResult, $sforceConn) {
 
     $soapClientArray = null;
-    
+
+    $arrContextOptions= [
+        'ssl' => [
+            'ciphers' => 'AES256-SHA',
+        ]
+    ];
+
 	  $phpversion = substr(phpversion(), 0, strpos(phpversion(), '-'));
 //		if (phpversion() > '5.1.2') {
 	  if ($phpversion > '5.1.2') {
@@ -46,6 +52,7 @@ class SforceMetadataClient {
       'encoding' => 'utf-8',
       'trace' => 1,
       'compression' => SOAP_COMPRESSION_ACCEPT | SOAP_COMPRESSION_GZIP,
+      'stream_context' => stream_context_create($arrContextOptions),
       'sessionId' => $loginResult->sessionId
       );
     } else {
@@ -116,7 +123,7 @@ class SforceMetadataClient {
     $this->_setClientId($header_array);
     $this->sforce->__setSoapHeaders($header_array);
   }
-  
+
   private function getObjtype($obj) {
     $classArray = explode('\\', get_class($obj));
     $objtype = array_pop($classArray);
@@ -129,28 +136,28 @@ class SforceMetadataClient {
   public function create($obj) {
     $encodedObj = new stdClass();
     $encodedObj->metadata = new SoapVar($obj, SOAP_ENC_OBJECT, $this->getObjtype($obj), $this->namespace);
-     
+
     return $this->sforce->create($encodedObj);
   }
-  
-  public function update($obj) {    
+
+  public function update($obj) {
     $encodedObj = new stdClass();
     $encodedObj->UpdateMetadata = $obj;
     $encodedObj->UpdateMetadata->metadata = new SoapVar($obj->metadata, SOAP_ENC_OBJECT, $this->getObjtype($obj->metadata), $this->namespace);
-    
+
     return $this->sforce->update($encodedObj);
   }
-  
+
   public function delete($obj) {
     $encodedObj = new stdClass();
     $encodedObj->metadata = new SoapVar($obj, SOAP_ENC_OBJECT, $this->getObjtype($obj), $this->namespace);
-     
+
     return $this->sforce->delete($encodedObj);
-  }  
-  
+  }
+
   public function checkStatus($ids) {
     return $this->sforce->checkStatus($ids);
-  }  
+  }
 
   public function getLastRequest() {
     return $this->sforce->__getLastRequest();
